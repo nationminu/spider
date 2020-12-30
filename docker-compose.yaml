@@ -1,0 +1,60 @@
+---
+version: "3.8"
+services:
+#--------------------------------------------------------------------------#
+#--------------------------------------------------------------------------#
+#                            S P I D E R  v4.0.4                           #
+#--------------------------------------------------------------------------#
+#--------------------------------------------------------------------------#    
+    spider:
+        image: "openjdk:11"
+        ports:
+            - "8080:8080"
+        environment:
+            TZ: "Asia/Seoul"
+            MYSQL_HOST: database:3306
+            MYSQL_DATABASE: spider
+            MYSQL_USER: spider
+            MYSQL_PASSWORD: spider
+        volumes:
+            - ./target:/app
+        command: bash -c "java -jar /app/*.jar"
+#--------------------------------------------------------------------------#
+#--------------------------------------------------------------------------#
+#                               M O N G D B  v4.2                          #
+#--------------------------------------------------------------------------#
+#--------------------------------------------------------------------------#   
+    database:
+        image: mongo:4.2
+        ports:
+            - "27017:27017"
+        environment: 
+            TZ: "Asia/Seoul"
+            MONGO_INITDB_ROOT_USERNAME: spider
+            MONGO_INITDB_ROOT_PASSWORD: spider 
+        volumes:
+            - ./database/data:/data/db:rw 
+            - ./src/main/resources/database:/docker-entrypoint-initdb.d:rw
+
+    elasticsearch:
+        image: elasticsearch:7.10.1
+        ports:
+            - "9200:9200"
+            - "9300:9300"
+        environment: 
+            TZ: "Asia/Seoul"
+            discovery.type: single-node 
+#        volumes:
+#            - ./database/esdata:/usr/share/elasticsearch/data:rw
+        ulimits:
+            memlock:
+                soft: -1
+                hard: -1
+
+    kibana:
+        image: kibana:7.10.1 
+        ports:
+            - 5601:5601
+        environment:
+            ELASTICSEARCH_URL: http://elasticsearch:9200
+            ELASTICSEARCH_HOSTS: http://elasticsearch:9200 
